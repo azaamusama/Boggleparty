@@ -66,6 +66,31 @@ ipconfig getifaddr en0
 5. On your phone, open `http://YOUR_LOCAL_IP:3000/join` or scan the QR code in the host lobby.
 6. Keep the phone and computer on the same Wi-Fi network.
 
+## Deploy on Render
+
+Render is the easiest free host for this MVP because it supports a long-running Node.js web service, which this Socket.IO server needs.
+
+### Option 1: Use `render.yaml`
+
+1. Push this repo to GitHub.
+2. In Render, create a new `Blueprint` service from the repository.
+3. Render will detect [`render.yaml`](/Users/mycs/Documents/GitHub/BoggleParty/render.yaml:1).
+4. Confirm the service settings and deploy.
+
+### Option 2: Manual Render setup
+
+Create a new `Web Service` in Render with:
+
+- Build command: `npm install && npm run build`
+- Start command: `npm run start`
+- Instance type: `Free`
+
+### Render notes
+
+- The free Render web service spins down after 15 minutes of inactivity, so the first request after idle may take about a minute to wake up.
+- Room state is still in-memory for MVP use, so restarting or redeploying the service clears active rooms.
+- The app binds to `PORT`, so it is compatible with Render's runtime port assignment.
+
 ## Scripts
 
 - `npm run dev` starts the custom TypeScript server with Next.js in development mode.
