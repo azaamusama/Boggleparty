@@ -1,13 +1,8 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import { LetterGrid } from "@/components/LetterGrid";
+import { LetterGrid, type GridCell } from "@/components/LetterGrid";
 import type { LetterGrid as LetterGridType } from "@/types/game";
-
-type GridCell = {
-  row: number;
-  column: number;
-};
 
 type WordInputProps = {
   disabled: boolean;
@@ -24,9 +19,9 @@ function isAdjacent(left: GridCell, right: GridCell) {
 
 export function WordInput({ disabled, grid, onSubmit }: WordInputProps) {
   const [selectedPath, setSelectedPath] = useState<GridCell[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
   const [hint, setHint] = useState("Tap or swipe across the grid to trace a word.");
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const gridRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef(false);
 
   const selectedWord = useMemo(
     () => selectedPath.map((cell) => grid[cell.row][cell.column]).join(""),
@@ -35,7 +30,7 @@ export function WordInput({ disabled, grid, onSubmit }: WordInputProps) {
 
   const clearSelection = () => {
     setSelectedPath([]);
-    setIsDragging(false);
+    isDraggingRef.current = false;
   };
 
   const submitSelection = () => {
@@ -45,6 +40,39 @@ export function WordInput({ disabled, grid, onSubmit }: WordInputProps) {
 
     onSubmit(selectedWord);
     clearSelection();
+  };
+
+  const parseCellFromElement = (element: Element | null): GridCell | null => {
+    const tile = element?.closest("[data-grid-cell='true']");
+
+    if (!tile) {
+      return null;
+    }
+
+    const row = Number(tile.getAttribute("data-row"));
+    const column = Number(tile.getAttribute("data-column"));
+
+    if (Number.isNaN(row) || Number.isNaN(column)) {
+      return null;
+    }
+
+    return { row, column };
+  };
+
+  const findCellFromPoint = (clientX: number, clientY: number) => {
+    const container = gridRef.current;
+
+    if (!container) {
+      return null;
+    }
+
+    const target = document.elementFromPoint(clientX, clientY);
+
+    if (!target || !container.contains(target)) {
+      return null;
+    }
+
+    return parseCellFromElement(target);
   };
 
   const extendPath = (cell: GridCell) => {
@@ -71,15 +99,7 @@ export function WordInput({ disabled, grid, onSubmit }: WordInputProps) {
   };
 
   return (
-    <div
-      ref={containerRef}
-      className="rounded-[2rem] border border-white/50 bg-white/90 p-4 shadow-[0_20px_64px_rgba(13,51,86,0.12)]"
-      onPointerLeave={() => {
-        if (isDragging) {
-          setIsDragging(false);
-        }
-      }}
-    >
+    <div className="rounded-[2rem] border border-white/50 bg-white/90 p-4 shadow-[0_20px_64px_rgba(13,51,86,0.12)]">
       <div className="flex items-start justify-between gap-4">
         <div>
           <label className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-700">
@@ -100,29 +120,52 @@ export function WordInput({ disabled, grid, onSubmit }: WordInputProps) {
       <div className="mt-4">
         <LetterGrid
           grid={grid}
+          gridRef={gridRef}
           disabled={disabled}
           interactive
           selectedPath={selectedPath}
-          onCellPointerDown={(cell) => {
+          onPointerDown={(event) => {
             if (disabled) {
               return;
             }
 
-            setHint("Keep dragging through neighboring letters.");
-            setIsDragging(true);
+            const cell = parseCellFromElement(event.target as Element);
+
+            if (!cell) {
+              return;
+            }
+
+            setHint("Keep sliding through neighboring letters, then lift to finish.");
+            isDraggingRef.current = true;
             setSelectedPath([cell]);
+            event.currentTarget.setPointerCapture(event.pointerId);
           }}
-          onCellPointerEnter={(cell) => {
-            if (!isDragging || disabled) {
+          onPointerMove={(event) => {
+            if (disabled || !isDraggingRef.current) {
+              return;
+            }
+
+            const cell = findCellFromPoint(event.clientX, event.clientY);
+
+            if (!cell) {
               return;
             }
 
             extendPath(cell);
           }}
-          onCellPointerUp={() => {
-            if (!disabled) {
-              setIsDragging(false);
+          onPointerUp={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
             }
+
+            isDraggingRef.current = false;
+          }}
+          onPointerCancel={(event) => {
+            if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+              event.currentTarget.releasePointerCapture(event.pointerId);
+            }
+
+            isDraggingRef.current = false;
           }}
         />
       </div>

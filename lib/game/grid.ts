@@ -44,10 +44,34 @@ const LETTER_WEIGHTS = [
 
 const DIRECTIONS = [-1, 0, 1];
 
+function createSeededRandom(seedText: string) {
+  let seed = 0;
+
+  for (let index = 0; index < seedText.length; index += 1) {
+    seed = (seed * 31 + seedText.charCodeAt(index)) >>> 0;
+  }
+
+  return () => {
+    seed = (seed * 1664525 + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+}
+
 export function generateLetterGrid(size = 4): LetterGrid {
   return Array.from({ length: size }, () =>
     Array.from({ length: size }, () => {
       const index = Math.floor(Math.random() * LETTER_WEIGHTS.length);
+      return LETTER_WEIGHTS[index];
+    }),
+  );
+}
+
+export function generatePreviewLetterGrid(seedText: string, size = 4): LetterGrid {
+  const random = createSeededRandom(seedText);
+
+  return Array.from({ length: size }, () =>
+    Array.from({ length: size }, () => {
+      const index = Math.floor(random() * LETTER_WEIGHTS.length);
       return LETTER_WEIGHTS[index];
     }),
   );

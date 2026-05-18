@@ -9,6 +9,7 @@ import { RoomCodeCard } from "@/components/RoomCodeCard";
 import { SubmittedWords } from "@/components/SubmittedWords";
 import { Timer } from "@/components/Timer";
 import { WordInput } from "@/components/WordInput";
+import { generatePreviewLetterGrid } from "@/lib/game/grid";
 import { getSocket } from "@/lib/socket/client";
 import type { Player, RoomSnapshot } from "@/types/game";
 
@@ -84,6 +85,10 @@ export default function PlayRoomPage() {
     (player) => player.name.toLowerCase() === playerName.toLowerCase(),
   );
   const currentGrid = room?.currentRound?.grid ?? null;
+  const previewGrid = useMemo(
+    () => generatePreviewLetterGrid(`host-preview-${room?.code ?? roomCode}`),
+    [room?.code, roomCode],
+  );
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fef2f2_0%,#eff6ff_55%,#ecfccb_100%)] px-4 py-6">
@@ -118,6 +123,18 @@ export default function PlayRoomPage() {
             {currentGrid ? (
               <div className="rounded-[2rem] bg-white/75 p-6 shadow-[0_24px_80px_rgba(13,51,86,0.12)]">
                 <LetterGrid grid={currentGrid} />
+              </div>
+            ) : room?.status === "lobby" ? (
+              <div className="rounded-[2rem] bg-white/75 p-6 shadow-[0_24px_80px_rgba(13,51,86,0.12)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-700">
+                  Preview grid
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  The live board will use a fresh round grid when the host starts the game.
+                </p>
+                <div className="mt-4">
+                  <LetterGrid grid={previewGrid} />
+                </div>
               </div>
             ) : null}
 

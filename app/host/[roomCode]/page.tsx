@@ -8,6 +8,7 @@ import { PlayerList } from "@/components/PlayerList";
 import { QRJoinCard } from "@/components/QRJoinCard";
 import { RoomCodeCard } from "@/components/RoomCodeCard";
 import { Timer } from "@/components/Timer";
+import { generatePreviewLetterGrid } from "@/lib/game/grid";
 import { getSocket } from "@/lib/socket/client";
 import type { RoomSnapshot } from "@/types/game";
 
@@ -84,6 +85,11 @@ export default function HostRoomPage() {
     };
   }, [roomCode, router]);
 
+  const previewGrid = useMemo(
+    () => generatePreviewLetterGrid(`host-preview-${room?.code ?? roomCode}`),
+    [room?.code, roomCode],
+  );
+
   const joinUrl =
     typeof window === "undefined" ? "" : `${window.location.origin}/join?room=${room?.code ?? roomCode}`;
 
@@ -142,6 +148,18 @@ export default function HostRoomPage() {
                 </p>
                 <div className="mt-4 max-w-md">
                   <LetterGrid grid={room.currentRound.grid} />
+                </div>
+              </div>
+            ) : room.status === "lobby" ? (
+              <div className="rounded-[2rem] bg-white/75 p-6 shadow-[0_24px_80px_rgba(13,51,86,0.12)]">
+                <p className="text-sm font-semibold uppercase tracking-[0.25em] text-sky-700">
+                  Preview grid
+                </p>
+                <p className="mt-2 text-sm text-slate-600">
+                  This room now shows a board preview before the round starts.
+                </p>
+                <div className="mt-4 max-w-md">
+                  <LetterGrid grid={previewGrid} />
                 </div>
               </div>
             ) : null}
