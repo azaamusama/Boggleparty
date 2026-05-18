@@ -83,6 +83,7 @@ export default function PlayRoomPage() {
   const currentPlayer: Player | undefined = room?.players.find(
     (player) => player.name.toLowerCase() === playerName.toLowerCase(),
   );
+  const currentGrid = room?.currentRound?.grid ?? null;
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fef2f2_0%,#eff6ff_55%,#ecfccb_100%)] px-4 py-6">
@@ -114,16 +115,17 @@ export default function PlayRoomPage() {
           </section>
 
           <section className="space-y-6">
-            {room?.currentRound ? (
+            {currentGrid ? (
               <div className="rounded-[2rem] bg-white/75 p-6 shadow-[0_24px_80px_rgba(13,51,86,0.12)]">
-                <LetterGrid grid={room.currentRound.grid} />
+                <LetterGrid grid={currentGrid} />
               </div>
             ) : null}
 
-            {room?.status === "playing" ? (
+            {room?.status === "playing" && currentGrid ? (
               <>
                 <WordInput
                   disabled={remainingSeconds <= 0}
+                  grid={currentGrid}
                   onSubmit={(word) => {
                     getSocket().emit("submit_word", {
                       roomCode,

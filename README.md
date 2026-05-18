@@ -113,4 +113,4 @@ Create a new `Web Service` in Render with:
 ## Notes
 
 - Room and player state is stored in memory, so restarting the server clears active rooms.
-- `data/words.txt` is intentionally small for MVP use and can later be replaced by a larger word list.
+- `data/words.txt` now uses a merged large American and British English wordlist derived from the official ESDB/SCOWL outputs. See [`data/DICTIONARY_SOURCE.md`](/Users/mycs/Documents/GitHub/BoggleParty/data/DICTIONARY_SOURCE.md:1).
